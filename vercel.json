@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/hub/:slug", "destination": "/api/hub?slug=:slug" }
+  ]
+}
