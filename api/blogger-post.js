@@ -1,5 +1,4 @@
 const https = require('https');
-
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
@@ -13,7 +12,6 @@ function getAccessToken() {
       refresh_token: REFRESH_TOKEN,
       grant_type: 'refresh_token'
     }).toString();
-
     const req = https.request(
       {
         hostname: 'oauth2.googleapis.com',
@@ -50,12 +48,10 @@ function createBloggerPost(accessToken, targetUrl) {
     try {
       domain = new URL(targetUrl).hostname;
     } catch (e) {}
-
     const body = JSON.stringify({
       title: `Recently Discovered: ${domain}`,
       content: `<p>A new page was recently discovered for indexing.</p><p>Source: <a href="${targetUrl}" rel="noopener">${targetUrl}</a></p>`
     });
-
     const req = https.request(
       {
         hostname: 'www.googleapis.com',
@@ -90,17 +86,18 @@ module.exports = async (req, res) => {
     res.status(405).send('Only POST allowed');
     return;
   }
-
   try {
     const { url } = req.body;
     if (!url) {
       res.status(400).json({ error: 'url is required' });
       return;
     }
-
     const accessToken = await getAccessToken();
     const post = await createBloggerPost(accessToken, url);
-
+    if (post.error) {
+      res.status(500).json({ success: false, blogger_error: post.error });
+      return;
+    }
     res.status(200).json({ success: true, postUrl: post.url, id: post.id });
   } catch (e) {
     res.status(500).json({ error: e.message });
